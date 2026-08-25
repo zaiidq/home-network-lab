@@ -11,7 +11,7 @@ Sensitive information such as IP addresses, authentication details, machine iden
 ## Live Server Status
 
 <p align="center">
-  <img src="screenshots/server-status.png" alt="Ubuntu Server Status" width="850">
+  <img src="evidence/screenshots/server-status.png" alt="Ubuntu Server Status" width="850">
 </p>
 
 <p align="center">
