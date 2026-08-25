@@ -2,7 +2,9 @@
 
 This document describes the Ubuntu Server used as the primary compute and service-hosting system in my home lab.
 
-The server is installed on an older laptop that was repurposed as a dedicated Linux server and is connected to the home network through wired Ethernet.
+The server runs on a repurposed Toshiba Satellite laptop and is connected to the home network through wired Ethernet.
+
+It functions as a multi-service Linux host for web application deployment, database hosting, network file sharing, remote administration, VPN access, game servers, and infrastructure experimentation.
 
 ---
 
@@ -11,26 +13,28 @@ The server is installed on an older laptop that was repurposed as a dedicated Li
 | Component           | Details                      |
 | ------------------- | ---------------------------- |
 | Operating System    | Ubuntu Server 24.04.4 LTS    |
-| Release             | 24.04                        |
-| Codename            | Noble                        |
+| Release             | 24.04 Noble                  |
+| Kernel              | Linux 6.8                    |
+| Architecture        | x86-64                       |
+| Hardware            | Toshiba Satellite L505       |
 | Hostname            | `zaid-server`                |
+| Memory              | ~6 GB RAM                    |
 | Administration      | SSH                          |
 | Network             | Wired Ethernet               |
-| Addressing          | Static / Reserved IP         |
-| Container Platform  | Docker                       |
+| Addressing          | Static IP                    |
 | Web Server          | Apache HTTP Server           |
-| VPN / Remote Access | Tailscale                    |
-| Media Server        | Plex                         |
-| File Sharing        | SMB                          |
+| Database            | MariaDB 10.11                |
+| Database Management | phpMyAdmin                   |
+| File Sharing        | Samba / SMB                  |
+| Remote Networking   | Tailscale                    |
 | Game Servers        | Minecraft Paper, CS 1.6 HLDS |
-
-The server is used as a general-purpose home lab host rather than being dedicated to a single application.
+| DNS Lab             | Pi-hole                      |
 
 ---
 
 ## Operating System
 
-The server currently runs **Ubuntu Server 24.04.4 LTS**.
+The server currently runs **Ubuntu Server 24.04.4 LTS (Noble)**.
 
 System information can be verified using:
 
@@ -41,33 +45,66 @@ lsb_release -a
 Example output:
 
 ```text
-No LSB modules are available.
 Distributor ID: Ubuntu
 Description:    Ubuntu 24.04.4 LTS
 Release:        24.04
 Codename:       noble
 ```
 
-Additional system information can be checked using:
+Additional system information:
 
 ```bash
 hostnamectl
-uname -a
 ```
 
-The hostname of the system is:
+Sanitized output:
 
 ```text
-zaid-server
+Static hostname: zaid-server
+Chassis: laptop
+Operating System: Ubuntu 24.04.4 LTS
+Kernel: Linux 6.8.0-138-generic
+Architecture: x86-64
+Hardware Vendor: TOSHIBA
+Hardware Model: Satellite L505
+```
+
+Unique identifiers such as Machine ID and Boot ID are intentionally excluded from this public documentation.
+
+---
+
+## Hardware Reuse
+
+Rather than purchasing dedicated server hardware, an older laptop was repurposed as a Linux server.
+
+This provides a low-cost environment for gaining practical experience with:
+
+* Linux administration
+* Networking
+* Web hosting
+* Database services
+* Remote access
+* File sharing
+* Self-hosted applications
+* Server troubleshooting
+
+The server currently has approximately **6 GB of RAM** and runs multiple services simultaneously.
+
+Example memory usage:
+
+```text
+               total        used        free      shared  buff/cache   available
+Mem:           5.7Gi       687Mi       4.2Gi        19Mi       1.1Gi       5.0Gi
+Swap:          2.0Gi          0B       2.0Gi
 ```
 
 ---
 
 ## Network Connectivity
 
-The Ubuntu server uses a wired Ethernet connection.
+The server is connected through wired Ethernet.
 
-Its physical path is:
+Its physical network path is:
 
 ```text
 Orange Fiber Main Router
@@ -79,27 +116,41 @@ Orange Fiber Main Router
    Ubuntu Server
 ```
 
-A static or reserved IP address is used so that the server maintains a predictable address on the local network.
+The Ethernet interface used by the server is:
 
-This is important because multiple services depend on being able to consistently reach the server.
+```text
+enp2s0
+```
 
-Examples include:
+A static IP configuration is used so that the server maintains a predictable address on the local network.
+
+This is important because several services rely on consistently reaching the same host.
+
+These include:
 
 * SSH
-* Plex
-* SMB file sharing
-* Web applications
+* Samba
+* Apache
+* phpMyAdmin
+* Hosted applications
 * Game servers
 * Tailscale
-* Local administration
+* DNS services
 
-Actual IP addresses are excluded from this public repository.
+Actual private IP addresses are intentionally excluded from this public repository.
+
+A sanitized routing example:
+
+```text
+default via <gateway-ip> dev enp2s0 proto static
+<private-subnet> dev enp2s0 proto kernel scope link src <server-ip>
+```
 
 ---
 
 ## Remote Administration with SSH
 
-Most server administration is performed remotely using **SSH** from another computer.
+The server is primarily managed remotely using **SSH**.
 
 Typical connection:
 
@@ -107,67 +158,32 @@ Typical connection:
 ssh zaid@<server-ip>
 ```
 
-SSH allows the server to operate without requiring a dedicated monitor, keyboard, or graphical desktop environment.
+This allows the server to operate without requiring a dedicated monitor, keyboard, or graphical desktop environment.
 
-Tasks performed through SSH include:
+SSH is used for tasks including:
 
 * Installing packages
 * Updating the operating system
 * Editing configuration files
-* Starting and stopping services
-* Managing Docker containers
+* Managing services
 * Deploying applications
-* Managing game servers
 * Inspecting logs
+* Managing game servers
+* Configuring networking
 * Transferring files
-* Troubleshooting network and application issues
+* Troubleshooting services
 
-Useful SSH-related commands include:
+The SSH daemon runs as a systemd service:
 
 ```bash
 systemctl status ssh
 ```
 
-and:
-
-```bash
-ss -tulpn
-```
-
-for checking listening services and ports.
-
----
-
-## Package Management
-
-Software installation and maintenance is performed using Ubuntu's APT package manager.
-
-Typical administration includes:
-
-```bash
-sudo apt update
-sudo apt upgrade
-```
-
-Packages can be installed using:
-
-```bash
-sudo apt install <package>
-```
-
-and removed using:
-
-```bash
-sudo apt remove <package>
-```
-
-Keeping the system updated is part of the normal maintenance of the server.
-
 ---
 
 ## Service Management
 
-Services running on the server are managed primarily through **systemd**.
+Ubuntu uses **systemd** for service management.
 
 Common commands used include:
 
@@ -191,18 +207,382 @@ sudo systemctl restart <service>
 sudo systemctl enable <service>
 ```
 
-This is used when administering services such as web servers, networking services, SSH, and other applications.
+These commands are regularly used to administer services such as Apache, MariaDB, Samba, SSH, Tailscale, and other server components.
 
 ---
 
-## Logs and Troubleshooting
+## Running Infrastructure Services
 
-When a service fails or behaves unexpectedly, logs are inspected before changing the configuration.
+Several infrastructure services currently run on the server.
 
-Common commands include:
+Selected services include:
+
+```text
+apache2.service       active running   Apache HTTP Server
+mariadb.service       active running   MariaDB Database Server
+nmbd.service          active running   Samba NMB Daemon
+smbd.service          active running   Samba SMB Daemon
+ssh.service           active running   OpenSSH Server
+tailscaled.service    active running   Tailscale Node Agent
+pihole-FTL.service    active running   Pi-hole FTL
+```
+
+These services demonstrate that the server functions as a real multi-service host rather than a single-purpose lab VM.
+
+---
+
+# Web Application Hosting
+
+## Apache HTTP Server
+
+**Apache HTTP Server** is installed and actively used for web application hosting.
+
+Apache is managed through systemd:
 
 ```bash
-journalctl
+systemctl status apache2
+```
+
+Configuration is primarily stored under:
+
+```text
+/etc/apache2/
+```
+
+The web server has been used as part of the deployment environment for my university graduation project.
+
+Working with Apache provided practical experience with:
+
+* Linux web server configuration
+* HTTP services
+* Virtual hosting concepts
+* Application deployment
+* Ports and listening services
+* Service management
+* Configuration files
+* Connectivity troubleshooting
+
+---
+
+## Application Deployment
+
+The server is used as an actual deployment environment rather than only for Linux practice.
+
+A simplified deployment architecture is:
+
+```text
+Development PC
+      │
+      ▼
+Application
+      │
+      ▼
+Ubuntu Server
+      │
+      ├── Apache
+      │
+      └── MariaDB
+             │
+             ▼
+       Application Data
+```
+
+Remote access to hosted applications can be provided through Tailscale.
+
+This allows projects developed on another machine to be deployed to the Ubuntu server and accessed from other devices.
+
+---
+
+# Database Infrastructure
+
+## MariaDB
+
+The server runs **MariaDB 10.11** as its relational database service.
+
+MariaDB is actively running as a systemd service:
+
+```bash
+systemctl status mariadb
+```
+
+The database service listens locally on the standard MySQL/MariaDB port:
+
+```text
+3306
+```
+
+The database is used as part of the application-hosting environment.
+
+This provides hands-on experience with:
+
+* Relational databases
+* Linux database services
+* Database server administration
+* Application-to-database communication
+* Database permissions
+* Service management
+* Database troubleshooting
+
+---
+
+## phpMyAdmin
+
+Database administration can also be performed from my desktop PC using **phpMyAdmin**.
+
+The architecture is approximately:
+
+```text
+Desktop PC
+    │
+    │ Web Browser
+    ▼
+phpMyAdmin
+    │
+    ▼
+MariaDB
+    │
+    ▼
+Application Databases
+```
+
+phpMyAdmin provides a browser-based interface for tasks such as:
+
+* Viewing databases
+* Viewing and modifying tables
+* Running SQL queries
+* Managing application data
+* Inspecting database structure
+* Database administration
+
+The combination of MariaDB and phpMyAdmin provides a practical database management environment alongside the web server.
+
+---
+
+# Network File Sharing
+
+## Samba / SMB
+
+The Ubuntu server provides network file sharing to Windows devices using **Samba** and the SMB protocol.
+
+The relevant Samba services are actively running:
+
+```text
+smbd.service    active running
+nmbd.service    active running
+```
+
+This allows directories stored on the Ubuntu server to be accessed directly from Windows.
+
+Example architecture:
+
+```text
+Windows PC
+    │
+    │ SMB
+    ▼
+Ubuntu Server
+    │
+    └── Shared Directories
+```
+
+A network share can be accessed from Windows using a path similar to:
+
+```text
+\\zaid-server\<share-name>
+```
+
+The file server is used for:
+
+* Transferring files between Windows and Linux
+* Accessing server storage from Windows
+* Centralized file storage
+* Sharing files across the LAN
+* Working with cross-platform permissions
+
+This setup provided practical experience with:
+
+* Samba
+* SMB
+* Linux file permissions
+* Shared directories
+* Windows/Linux interoperability
+* Network storage
+* File access troubleshooting
+
+---
+
+# Remote Networking
+
+## Tailscale
+
+**Tailscale** is installed on the Ubuntu server and provides secure remote connectivity.
+
+It creates a private network between authorized devices without requiring them to be physically connected to the home LAN.
+
+The setup is used for:
+
+* Remote SSH access
+* Remote application access
+* Accessing private services
+* Game server connectivity
+* Connecting devices across different networks
+* Avoiding unnecessary direct port exposure
+
+The Ubuntu server has also been configured as a **Tailscale Exit Node**.
+
+Architecture:
+
+```text
+Remote Device
+     │
+     ▼
+Tailscale
+     │
+     ▼
+Ubuntu Server
+     │
+     ├── SSH
+     ├── Applications
+     ├── File Services
+     └── Game Servers
+```
+
+---
+
+## Tailscale Funnel
+
+**Tailscale Funnel** has also been configured on the server.
+
+Funnel allows selected locally hosted services to be made reachable through HTTPS without requiring conventional inbound port forwarding on the ISP router.
+
+Simplified architecture:
+
+```text
+Internet Client
+      │
+      │ HTTPS
+      ▼
+Tailscale Funnel
+      │
+      ▼
+Ubuntu Server
+      │
+      ▼
+Hosted Application
+```
+
+This has been useful when deploying applications from the home server while working around limitations of the ISP-provided router.
+
+Actual Tailscale IP addresses, account information, and public Funnel hostnames are intentionally excluded from the repository.
+
+---
+
+# Game Server Hosting
+
+## Minecraft Paper
+
+The Ubuntu server has been used to host a multiplayer **Minecraft server using Paper**.
+
+Tasks performed included:
+
+* Installing Java
+* Deploying Paper
+* Configuring server properties
+* Managing server files
+* Starting and stopping the server
+* Remote administration through SSH
+* Allowing friends to connect remotely
+* Troubleshooting connectivity
+* Managing the server process
+
+Simplified architecture:
+
+```text
+Remote Players
+      │
+      ▼
+Tailscale VPN
+      │
+      ▼
+Ubuntu Server
+      │
+      ▼
+Minecraft Paper
+```
+
+This provided hands-on experience hosting a persistent multiplayer client/server application on Linux.
+
+---
+
+## Counter-Strike 1.6 HLDS
+
+A **Counter-Strike 1.6 dedicated server** was also deployed using HLDS.
+
+Tasks included:
+
+* Installing server components
+* Configuring HLDS
+* Managing server processes
+* Testing connectivity
+* Troubleshooting network access
+* Allowing remote players to connect
+* Administering the service through Linux
+
+Tailscale was used to provide remote VPN-based connectivity to the server.
+
+This project provided additional experience with:
+
+* UDP/TCP connectivity
+* Client/server architecture
+* Network ports
+* Linux processes
+* Remote connectivity
+* Troubleshooting
+
+---
+
+# DNS Lab
+
+## Pi-hole
+
+Pi-hole is installed on the Ubuntu server and its FTL service remains installed and running.
+
+However, the server is **not currently used as the active network-wide DNS resolver**.
+
+Pi-hole was originally deployed and tested for:
+
+* Network-wide DNS filtering
+* DNS resolution
+* Upstream DNS forwarding
+* Client DNS configuration
+* Ad and tracker blocking
+* DNS troubleshooting
+
+During testing, DNS behavior involving the ISP-provided Orange router caused reliability and compatibility issues.
+
+Rather than keeping an unreliable network-wide DNS configuration in production, Pi-hole was removed from the active DNS path.
+
+This experiment provided practical experience with:
+
+* DNS infrastructure
+* DNS forwarding
+* Router DNS behavior
+* Client resolver behavior
+* Network troubleshooting
+* Rollback procedures
+
+---
+
+# Troubleshooting
+
+Troubleshooting is a major part of operating the server.
+
+Instead of immediately restarting services when something fails, I use logs, listening ports, service status, and network information to identify the cause.
+
+Common tools include:
+
+```bash
+systemctl status <service>
 ```
 
 ```bash
@@ -213,16 +593,8 @@ journalctl -u <service>
 journalctl -xe
 ```
 
-For live log monitoring:
-
 ```bash
-journalctl -f
-```
-
-Other useful commands include:
-
-```bash
-systemctl status <service>
+ss -tulpn
 ```
 
 ```bash
@@ -230,351 +602,89 @@ ps aux
 ```
 
 ```bash
-top
-```
-
-```bash
-ss -tulpn
-```
-
-The goal is to identify the source of a problem before restarting or changing services blindly.
-
----
-
-## Docker
-
-Docker is installed on the server and is used for containerized workloads and application deployment.
-
-Docker provides an isolated environment in which applications and their dependencies can run.
-
-Common commands used for administration include:
-
-```bash
-docker ps
-```
-
-```bash
-docker ps -a
-```
-
-```bash
-docker images
-```
-
-```bash
-docker logs <container>
-```
-
-```bash
-docker start <container>
-```
-
-```bash
-docker stop <container>
-```
-
-Docker has also been used as part of the deployment environment for applications hosted on the server.
-
-### Experience Gained
-
-Working with Docker provided hands-on experience with:
-
-* Containers
-* Images
-* Container lifecycle management
-* Exposed ports
-* Application deployment
-* Container logs
-* Linux networking
-* Service troubleshooting
-
----
-
-## Apache Web Server
-
-The server runs **Apache HTTP Server** as part of its application-hosting environment.
-
-Apache has been used when deploying web applications, including my university graduation project.
-
-Apache administration includes:
-
-```bash
-systemctl status apache2
-```
-
-```bash
-sudo systemctl restart apache2
-```
-
-Configuration is stored primarily under:
-
-```text
-/etc/apache2/
-```
-
-Apache has provided practical experience with:
-
-* Linux web hosting
-* HTTP services
-* Application deployment
-* Configuration files
-* Service management
-* Network accessibility
-* Troubleshooting web applications
-
----
-
-## Application Deployment
-
-The server is used as a real deployment environment rather than only as a Linux practice machine.
-
-A typical deployment path is:
-
-```text
-Development Machine
-        │
-        ▼
-Application / Project
-        │
-        ▼
-Ubuntu Server
-        │
-        ├── Apache
-        └── Docker
-              │
-              ▼
-        Hosted Application
-```
-
-Tailscale can then be used to access services remotely when required.
-
-This has allowed the server to be used for development testing and externally accessible demonstrations without requiring every service to be directly exposed through the ISP router.
-
----
-
-## Tailscale
-
-Tailscale is installed on the Ubuntu server for secure remote network access.
-
-The server participates in a private Tailscale network that allows authorized devices to communicate even when they are outside the home network.
-
-Tailscale is used for:
-
-* Remote SSH access
-* Remote application access
-* Game server connectivity
-* Private networking between devices
-* Accessing services without exposing them directly to the Internet
-
-The Ubuntu server has also been configured as a **Tailscale Exit Node**.
-
-Useful commands include:
-
-```bash
-tailscale status
-```
-
-and:
-
-```bash
 ip addr
 ```
 
-to inspect network interfaces and connectivity.
-
-Authentication information and Tailscale IP addresses are intentionally excluded from this repository.
-
----
-
-## SMB Network File Sharing
-
-The Ubuntu server provides network file-sharing functionality for Windows clients.
-
-Shared folders hosted on the Linux server can be accessed from Windows over the local network using SMB.
-
-The architecture is:
-
-```text
-Windows PC
-    │
-    │ SMB
-    ▼
-Ubuntu Server
-    │
-    ├── Shared Files
-    └── Media Storage
+```bash
+ip route
 ```
 
-From Windows, network shares can be accessed using a path similar to:
-
-```text
-\\zaid-server\<share-name>
+```bash
+ping <host>
 ```
 
-This setup is used for:
-
-* Moving files between Windows and Linux
-* Centralized storage
-* Accessing server files without copying them manually
-* Sharing media files
-* Cross-platform file access
-
-It also required working with:
-
-* Linux file permissions
-* Shared directories
-* Network accessibility
-* Windows/Linux interoperability
-
-Sensitive share names and private directory structures are not published here.
-
----
-
-## Plex Media Server
-
-**Plex Media Server** runs on the Ubuntu system and provides centralized access to media stored on the server.
-
-Architecture:
-
-```text
-Media Storage
-     │
-     ▼
-Ubuntu Server
-     │
-     ▼
-Plex Media Server
-     │
-     ├── Desktop
-     ├── Browser
-     ├── Mobile Devices
-     └── TVs / Other Clients
+```bash
+curl <address>
 ```
 
-This provides hands-on experience with:
+These tools are used to troubleshoot:
 
-* Self-hosted applications
-* Linux storage
-* Media libraries
-* Network streaming
-* Client/server architecture
-* Service administration
-* Multi-device connectivity
-
-Plex runs alongside other services on the same Ubuntu system.
+* Failed services
+* Web application issues
+* Network connectivity
+* Port conflicts
+* DNS problems
+* Database connectivity
+* Remote access
+* Game servers
 
 ---
 
-## Minecraft Paper Server
+# Listening Services
 
-The server has been used to host a multiplayer **Minecraft Paper server**.
+The server exposes different services depending on their intended role.
 
-Tasks involved:
+Examples include:
 
-* Installing Java
-* Downloading and deploying Paper
-* Configuring the server
-* Managing server files
-* Starting and stopping the server
-* Monitoring the process
-* Troubleshooting server issues
-* Allowing friends to connect remotely
+| Service     | Purpose                      |
+| ----------- | ---------------------------- |
+| SSH         | Remote server administration |
+| Apache      | Web application hosting      |
+| MariaDB     | Relational database          |
+| Samba       | Windows/Linux file sharing   |
+| Pi-hole FTL | DNS service / lab            |
+| Tailscale   | VPN and remote networking    |
 
-Example server administration flow:
+The exact IP addresses and externally reachable endpoints are intentionally not published.
 
-```text
-Remote Player
-     │
-     ▼
-Private Network / Tailscale
-     │
-     ▼
-Ubuntu Server
-     │
-     ▼
-Minecraft Paper
+Ports can be inspected using:
+
+```bash
+sudo ss -tulpn
 ```
 
-This provided experience with hosting a persistent multiplayer service on Linux.
-
 ---
 
-## Counter-Strike 1.6 HLDS
+# Package Management
 
-A **Counter-Strike 1.6 dedicated server** was also deployed using HLDS.
+Ubuntu packages are managed using APT.
 
-Tasks included:
+Typical maintenance commands include:
 
-* Installing the required server components
-* Configuring HLDS
-* Starting and stopping the dedicated server
-* Testing ports and connectivity
-* Allowing remote clients to connect
-* Managing the process through Linux
-* Troubleshooting game-server connectivity
-
-Tailscale was used to provide VPN-based connectivity for remote players.
-
----
-
-## Pi-hole DNS Experiment
-
-Pi-hole was installed and tested on the Ubuntu server as a network-wide DNS filtering solution.
-
-The experiment involved:
-
-* Installing Pi-hole
-* Testing DNS queries
-* Configuring upstream DNS
-* Testing network-wide filtering
-* Changing client/network DNS behavior
-* Diagnosing DNS problems
-
-The deployment exposed compatibility and reliability issues involving the ISP-provided Orange router.
-
-Rather than keeping an unreliable DNS service active, Pi-hole was disabled.
-
-**Current status:** Disabled.
-
-This experiment was still valuable because it provided practical experience with:
-
-* DNS infrastructure
-* DNS forwarding
-* Client resolver behavior
-* Router limitations
-* Troubleshooting
-* Rollback procedures
-
----
-
-## Multi-Service Server
-
-The server currently functions as a **multi-service Linux host**.
-
-```text
-                  Ubuntu Server
-                       │
-        ┌──────────────┼──────────────┐
-        │              │              │
-       SSH           Docker         Apache
-        │
-   ┌────┼──────────────┼───────────────┐
-   │    │              │               │
- Plex  SMB        Applications      Tailscale
-   │                                    │
-Media                              Remote Access
-   │
-   ├── Minecraft Paper
-   └── CS 1.6 HLDS
+```bash
+sudo apt update
+sudo apt upgrade
 ```
 
-Running several services on the same machine has provided experience with resource sharing, ports, service management, networking, and troubleshooting interactions between applications.
+Package installation:
+
+```bash
+sudo apt install <package>
+```
+
+Package removal:
+
+```bash
+sudo apt remove <package>
+```
+
+Regular system maintenance and updates are part of administering the server.
 
 ---
 
-## Useful Administration Commands
+# Useful Administration Commands
 
-### System Information
+## System Information
 
 ```bash
 lsb_release -a
@@ -582,168 +692,175 @@ hostnamectl
 uname -a
 ```
 
-### Network Information
-
-```bash
-ip addr
-ip route
-```
-
-### Listening Ports
-
-```bash
-ss -tulpn
-```
-
-### Disk Usage
-
-```bash
-df -h
-```
-
-### Memory
+## Memory
 
 ```bash
 free -h
 ```
 
-### Processes
+## Disk Usage
+
+```bash
+df -h
+```
+
+## Network Interfaces
+
+```bash
+ip addr
+```
+
+## Routing
+
+```bash
+ip route
+```
+
+## Listening Ports
+
+```bash
+sudo ss -tulpn
+```
+
+## Running Services
+
+```bash
+systemctl --type=service --state=running
+```
+
+## Logs
+
+```bash
+journalctl -xe
+```
+
+## Processes
 
 ```bash
 ps aux
 top
 ```
 
-### Services
-
-```bash
-systemctl --type=service --state=running
-```
-
-### Logs
-
-```bash
-journalctl -xe
-```
-
-### Docker
-
-```bash
-docker ps
-```
-
----
-
-## Evidence
-
-Screenshots and sanitized command outputs will be added to demonstrate the live environment.
-
-Planned evidence includes:
-
-### Operating System
-
-```bash
-lsb_release -a
-hostnamectl
-```
-
-### Resources
-
-```bash
-free -h
-df -h
-```
-
-### Networking
-
-```bash
-ip addr
-ip route
-```
-
-### Running Services
-
-```bash
-systemctl --type=service --state=running
-```
-
-### Docker
-
-```bash
-docker ps
-```
-
-### Tailscale
+## Tailscale
 
 ```bash
 tailscale status
 ```
 
-Before publishing screenshots or terminal output, sensitive information such as IP addresses, usernames where necessary, authentication information, and private service details will be sanitized.
+---
+
+# Current Server Architecture
+
+```text
+                         Ubuntu Server
+                              │
+         ┌────────────────────┼────────────────────┐
+         │                    │                    │
+        SSH                 Apache             Tailscale
+         │                    │                    │
+Remote Admin             Web Hosting          Remote Access
+                              │                    │
+                       ┌──────┴──────┐        Exit Node
+                       │             │             │
+                    MariaDB     Applications     Funnel
+                       │
+                   phpMyAdmin
+
+         ┌────────────────────────────────────────┐
+         │                                        │
+      Samba / SMB                          Game Servers
+         │                                 │        │
+   Network Shares                   Minecraft   CS 1.6
+```
+
+This architecture allows a single repurposed Linux system to provide several independent infrastructure services.
 
 ---
 
-## Security and Privacy
+# Skills Demonstrated
 
-This repository intentionally excludes:
+| Area                    | Practical Experience                           |
+| ----------------------- | ---------------------------------------------- |
+| Linux Administration    | Ubuntu Server, CLI administration              |
+| Remote Administration   | SSH                                            |
+| Networking              | TCP/IP, interfaces, routing, static addressing |
+| Service Management      | systemd                                        |
+| Troubleshooting         | journalctl, logs, ports, processes             |
+| Web Hosting             | Apache HTTP Server                             |
+| Database                | MariaDB                                        |
+| Database Administration | phpMyAdmin                                     |
+| File Services           | Samba, SMB                                     |
+| VPN                     | Tailscale                                      |
+| Remote Publishing       | Tailscale Funnel                               |
+| DNS                     | Pi-hole, DNS forwarding                        |
+| Game Hosting            | Minecraft Paper, CS 1.6 HLDS                   |
+| Deployment              | Linux-hosted application deployment            |
+| Cross-Platform Services | Windows/Linux network file sharing             |
+
+---
+
+# Security and Privacy
+
+Because this repository is public, sensitive infrastructure information is intentionally excluded.
+
+The repository does not publish:
 
 * Passwords
 * SSH private keys
 * Tailscale authentication keys
+* Tailscale IP addresses
+* Internal IP assignments
 * Public IP addresses
-* Internal IP address assignments
+* Database credentials
+* phpMyAdmin credentials
 * Application secrets
 * API keys
-* Private configuration values
-* Personal files
+* Private files
+* Unique machine identifiers
 
-Any configuration examples published in the repository will be sanitized first.
-
----
-
-## Skills Demonstrated
-
-| Area                  | Practical Experience                         |
-| --------------------- | -------------------------------------------- |
-| Linux                 | Ubuntu Server administration                 |
-| Remote Administration | SSH                                          |
-| Networking            | TCP/IP, interfaces, ports, static addressing |
-| Service Management    | systemd                                      |
-| Troubleshooting       | logs, processes, services, connectivity      |
-| Containers            | Docker                                       |
-| Web Hosting           | Apache                                       |
-| VPN                   | Tailscale                                    |
-| Storage               | SMB network sharing                          |
-| Media                 | Plex Media Server                            |
-| Game Hosting          | Minecraft Paper, HLDS                        |
-| DNS                   | Pi-hole testing and troubleshooting          |
-| Deployment            | Hosting applications on Linux                |
+Any screenshots or configuration examples added to the repository will be sanitized before publication.
 
 ---
 
-## Next Improvements
+# Future Improvements
 
-Future improvements to the server environment may include:
+Planned areas for further development include:
 
 * Automated backups
-* Docker Compose
-* Reverse proxy
-* HTTPS / TLS
 * Firewall hardening
-* Service monitoring
+* HTTPS / TLS configuration
+* Reverse proxy deployment
+* Server monitoring
 * Resource monitoring
 * Centralized logging
-* Automated deployment
+* Automated application deployment
+* Docker / container experimentation
 * CI/CD
+* Infrastructure automation
 * Cloud integration
-* Configuration management
+* Network segmentation
+* VLAN experimentation
 
 ---
 
-## Summary
+# What I Learned
 
-Repurposing an older laptop as an Ubuntu Server turned it into a practical environment for learning infrastructure through real use.
+Repurposing an older laptop as an Ubuntu Server provided a practical environment for learning infrastructure through real usage rather than isolated tutorials.
 
-Instead of running a single test service, the server has been used for remote administration, application deployment, containers, file sharing, media streaming, VPN networking, DNS experimentation, and multiplayer game hosting.
+The server has required working with multiple technologies simultaneously, including:
 
-This environment continues to serve as my primary platform for developing practical Linux, networking, systems administration, and infrastructure skills.
+* Linux
+* Networking
+* SSH
+* Apache
+* MariaDB
+* phpMyAdmin
+* Samba
+* Tailscale
+* DNS
+* Web application deployment
+* Multiplayer game servers
+
+Operating multiple services on the same host also required understanding how ports, processes, permissions, network interfaces, and services interact.
+
+The server continues to serve as my primary hands-on environment for developing practical skills in **Linux administration, networking, systems administration, application deployment, and infrastructure troubleshooting**.
