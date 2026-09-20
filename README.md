@@ -4,12 +4,14 @@
 
 **A hands-on home infrastructure lab focused on Linux administration, networking, self-hosting, remote access, application deployment, and troubleshooting.**
 
-![Ubuntu](https://img.shields.io/badge/Ubuntu_Server-24.04_LTS-E95420?logo=ubuntu\&logoColor=white)
-![Apache](https://img.shields.io/badge/Apache-HTTP_Server-D22128?logo=apache\&logoColor=white)
-![MariaDB](https://img.shields.io/badge/MariaDB-10.11-003545?logo=mariadb\&logoColor=white)
-![Tailscale](https://img.shields.io/badge/Tailscale-Remote_Access-242424?logo=tailscale\&logoColor=white)
-![Samba](https://img.shields.io/badge/Samba-SMB_File_Sharing-0C5DA5?logo=samba\&logoColor=white)
-![Linux](https://img.shields.io/badge/Linux-System_Administration-FCC624?logo=linux\&logoColor=black)
+![Ubuntu](//img.shields.io/badge/Ubuntu_Server-24.04_LTS-E95420?logo=ubuntu&logoColor=white)
+![Docker](//img.shields.io/badge/Docker-Containerization-0db7ed?logo=docker&logoColor=white)
+![Plex](//img.shields.io/badge/Plex-Media_Server-E5A00D?logo=plex&logoColor=white)
+![Apache](//img.shields.io/badge/Apache-HTTP_Server-D22128?logo=apache&logoColor=white)
+![MariaDB](//img.shields.io/badge/MariaDB-10.11-003545?logo=mariadb&logoColor=white)
+![Tailscale](//img.shields.io/badge/Tailscale-Remote_Access-242424?logo=tailscale&logoColor=white)
+![Samba](//img.shields.io/badge/Samba-SMB_File_Sharing-0C5DA5?logo=samba&logoColor=white)
+![Linux](//img.shields.io/badge/Linux-System_Administration-FCC624?logo=linux&logoColor=black)
 
 </div>
 
@@ -42,6 +44,9 @@ The lab covers:
 * IP intercom and PoE infrastructure
 * HDMI-over-IP distribution
 * Network and service troubleshooting
+* **Docker containerization**
+* **Centralized infrastructure dashboard (Homepage)**
+* **Media server hosting (Plex)**
 
 At the center of the lab is a repurposed laptop running **Ubuntu Server 24.04.4 LTS**, which functions as a multi-service Linux server.
 
@@ -149,8 +154,34 @@ The Ubuntu server currently runs several infrastructure services simultaneously.
 | Tailscale          | Secure remote connectivity            |
 | Tailscale Funnel   | HTTPS publishing of selected services |
 | Pi-hole FTL        | DNS filtering / DNS lab               |
+| **Docker Engine**  | **Containerization platform**         |
+| **Homepage**       | **Centralized service dashboard**     |
+| **Plex**           | **Local media streaming server**      |
 
 This makes the machine a **multi-service Linux host** rather than a single-purpose server.
+
+---
+
+## Docker & Centralized Dashboard
+
+The infrastructure has been expanded to support **Docker** and containerized services. 
+
+A centralized dashboard was deployed using **Homepage** to monitor and access all self-hosted applications from a single unified interface.
+
+The dashboard integrates directly with the APIs of other running services to display real-time statistics, including:
+* **System Metrics:** Live CPU, RAM, and storage utilization.
+* **Pi-hole:** Live metrics for blocked ads and DNS queries.
+* **Plex:** Active media streams and library statistics.
+
+<p align="center">
+  *(Screenshot of Homepage Dashboard)*
+  <!-- Add your dashboard screenshot here -->
+</p>
+
+This deployment provides hands-on experience with:
+* Docker and `docker-compose`
+* YAML configuration
+* API integrations for service monitoring
 
 ---
 
@@ -630,11 +661,14 @@ These tools are used to diagnose:
 | Networking              | TCP/IP, Ethernet, DHCP, DNS, NAT         |
 | IP Management           | Static / reserved addressing             |
 | Service Management      | systemd                                  |
+| **Containerization**    | **Docker, Docker Compose, YAML**         |
+| **Service Monitoring**  | **Homepage Dashboard, API Integration**  |
 | Troubleshooting         | journalctl, ports, processes, routing    |
 | Web Hosting             | Apache HTTP Server                       |
 | Database                | MariaDB 10.11                            |
 | Database Administration | phpMyAdmin                               |
 | File Services           | Samba / SMB                              |
+| **Media Server**        | **Plex Media Server**                    |
 | VPN                     | Tailscale                                |
 | Remote Publishing       | Tailscale Funnel                         |
 | DNS                     | Pi-hole, DNS forwarding                  |
@@ -716,12 +750,8 @@ Future areas of development include:
 
 * Automated backups
 * Firewall hardening
-* Docker and containerized services
-* Docker Compose
 * Reverse proxy deployment
 * HTTPS / TLS configuration
-* Infrastructure monitoring
-* Resource monitoring
 * Centralized logging
 * Network segmentation
 * VLAN experimentation
