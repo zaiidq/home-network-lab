@@ -4,14 +4,14 @@
 
 **A hands-on home infrastructure lab focused on Linux administration, networking, self-hosting, remote access, application deployment, and troubleshooting.**
 
-![Ubuntu](//img.shields.io/badge/Ubuntu_Server-24.04_LTS-E95420?logo=ubuntu&logoColor=white)
-![Docker](//img.shields.io/badge/Docker-Containerization-0db7ed?logo=docker&logoColor=white)
-![Plex](//img.shields.io/badge/Plex-Media_Server-E5A00D?logo=plex&logoColor=white)
-![Apache](//img.shields.io/badge/Apache-HTTP_Server-D22128?logo=apache&logoColor=white)
-![MariaDB](//img.shields.io/badge/MariaDB-10.11-003545?logo=mariadb&logoColor=white)
-![Tailscale](//img.shields.io/badge/Tailscale-Remote_Access-242424?logo=tailscale&logoColor=white)
-![Samba](//img.shields.io/badge/Samba-SMB_File_Sharing-0C5DA5?logo=samba&logoColor=white)
-![Linux](//img.shields.io/badge/Linux-System_Administration-FCC624?logo=linux&logoColor=black)
+![Ubuntu](https://img.shields.io/badge/Ubuntu_Server-24.04_LTS-E95420?logo=ubuntu\&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containerization-0db7ed?logo=docker\&logoColor=white)
+![Plex](https://img.shields.io/badge/Plex-Media_Server-E5A00D?logo=plex\&logoColor=white)
+![Apache](https://img.shields.io/badge/Apache-HTTP_Server-D22128?logo=apache\&logoColor=white)
+![MariaDB](https://img.shields.io/badge/MariaDB-10.11-003545?logo=mariadb\&logoColor=white)
+![Tailscale](https://img.shields.io/badge/Tailscale-Remote_Access-242424?logo=tailscale\&logoColor=white)
+![Samba](https://img.shields.io/badge/Samba-SMB_File_Sharing-0C5DA5?logo=samba\&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-System_Administration-FCC624?logo=linux\&logoColor=black)
 
 </div>
 
